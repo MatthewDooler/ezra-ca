@@ -21,8 +21,9 @@ C = GB
 ST = London
 L = London
 O = Ezra
-OU = $hostname
+OU = Ezra
 CN = $hostname
+emailAddress = webmaster@$hostname
 
 [v3_req]
 basicConstraints = CA:FALSE
