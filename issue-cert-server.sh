@@ -1,18 +1,19 @@
 #!/bin/sh
+set -e
 if [ -z ${1+x} ]; then
-	echo "Need hostname argument";
+	echo "Usage: ./issue-cert-server.sh <cn>";
 else
-	# TODO: Support for issuing for people (email addresses) rather than hosts (domain names)
 	echo "Issuing certificate for '$1'";
-	hostname=$1
+	CN=$1
 	echo "Generating RSA key pair"
-	openssl genrsa -out private/$hostname.key 2048
+	openssl genrsa -out private/$CN.key 2048
 	openssl rsa \
-		-in private/$hostname.key \
+		-in private/$CN.key \
 		-outform PEM \
 		-pubout \
-		-out $hostname.pub
+		-out $CN.pub
 	echo "Generating CSR"
+	rm -rf conf/csr_config.cnf
 	touch conf/csr_config.cnf
 	cat >> conf/csr_config.cnf <<EOF
 [req]
@@ -26,21 +27,21 @@ ST = London
 L = London
 O = Ezra
 OU = Ezra
-CN = $hostname
-emailAddress = webmaster@$hostname
+CN = $CN
+emailAddress = webmaster@$CN
 
 [req_ext]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = $hostname
-DNS.2 = www.$hostname
+DNS.1 = $CN
+DNS.2 = www.$CN
 EOF
 	openssl req \
 		-new \
 		-config conf/csr_config.cnf \
-		-keyout private/$hostname.key \
-		-out $hostname.csr \
+		-keyout private/$CN.key \
+		-out $CN.csr \
 		-sha256 \
 		-newkey rsa:2048 \
 		-nodes \
@@ -49,14 +50,14 @@ EOF
 	echo "Signing certificate"
 	openssl ca \
 		-config conf/ezra.conf \
-		-in $hostname.csr \
-		-out $hostname.crt \
+		-in $CN.csr \
+		-out $CN.crt \
 		-extensions server_ext
-	rm -rf $hostname.csr
+	rm -rf $CN.csr
 	echo "Exporting"
 	openssl pkcs12 -export \
-		-out $hostname.pfx \
-		-inkey private/$hostname.key \
-		-in $hostname.crt \
+		-out $CN.pfx \
+		-inkey private/$CN.key \
+		-in $CN.crt \
 		-certfile ezra.crt
 fi
