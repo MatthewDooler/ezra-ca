@@ -46,7 +46,7 @@ EOF
 		-config conf/ezra.conf \
 		-in $FILENAME.csr \
 		-out $FILENAME.crt \
-		-extensions server_ext
+		-extensions client_ext
 	rm -rf $FILENAME.csr
 	echo "Exporting"
 	openssl pkcs12 -export \
